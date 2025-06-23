@@ -1,0 +1,10 @@
+[package]
+name = "portscan"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+once_cell = "1.21.3"
+procfs = "0.17.0"
+users = "0.11.0"
