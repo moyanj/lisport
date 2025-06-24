@@ -29,7 +29,6 @@ impl FromStr for PortService {
 
         let name = parts.next().ok_or("Missing name")?.to_string();
         let port_proto = parts.next().ok_or("Missing port/proto")?;
-        let _frequency = parts.next().ok_or("Missing frequency")?; // 跳过 frequency
 
         let (port, protocol) = port_proto
             .split_once('/')
