@@ -28,7 +28,7 @@ impl AppState {
     }
 }
 
-pub fn ui_main() -> Result<(), Box<dyn std::error::Error>> {
+pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -183,5 +183,5 @@ pub fn ui_main() -> Result<(), Box<dyn std::error::Error>> {
     // Clean up terminal
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    Ok(())
+    Ok("".to_string())
 }

@@ -1,4 +1,4 @@
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use procfs::{
     net::TcpState,
     process::{FDTarget, Process},
@@ -6,10 +6,11 @@ use procfs::{
 use services::get_service;
 use std::collections::HashMap;
 
+mod output;
 mod services;
 mod ui;
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct PortInfo {
     port: u16,
     pid: Option<i32>,
@@ -21,24 +22,20 @@ struct PortInfo {
 #[command(author, version, about, long_about = None)]
 struct Cli {
     #[arg(short, long, value_enum)]
-    output: Option<OutputType>,
+    format: Option<output::OutputFormat>,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
-enum OutputType {
-    Json,
-    Text,
-    MD,
-}
-
-fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    match cli.output {
-        Some(OutputType::Json) => Ok(()),
-        Some(OutputType::Text) => Ok(()),
-        Some(OutputType::MD) => Ok(()),
-        None => ui::ui_main(),
-    }
+    let ports = get_listening_ports()?;
+    let text = match cli.format {
+        Some(output::OutputFormat::Text) => output::output_ports(output::OutputFormat::Text, ports),
+        Some(output::OutputFormat::Json) => output::output_ports(output::OutputFormat::Json, ports),
+        Some(output::OutputFormat::Md) => output::output_ports(output::OutputFormat::Md, ports),
+        None => ui::ui_main()?,
+    };
+    println!("{}", text);
+    Ok(())
 }
 
 fn get_listening_ports() -> Result<Vec<PortInfo>, Box<dyn std::error::Error>> {
