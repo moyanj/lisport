@@ -9,25 +9,24 @@ use crate::services;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct PortInfo {
-    pub port: u16, // 端口号
+    pub port: u16,
     pub inode: u64,
-    pub is_ipv6: bool, // 是否为IPv6
-    pub host: String,  // 主机名
-
-    pub pid: Option<i32>,          // 进程 ID
-    pub process: Option<String>,   // 进程名称
-    pub full_path: Option<String>, // 进程完整路径
-    pub cwd: Option<String>,       // 当前工作目录
-    pub service: Option<String>,   // 服务名称
-
-    pub is_privileged: bool,  // 是否有特权
-    pub user: Option<String>, // 用户
+    pub is_ipv6: bool,
+    pub host: String,
+    pub pid: Option<i32>,
+    pub process: Option<String>,      // Process name
+    pub full_command: Option<String>, // Full command line
+    pub cwd: Option<String>,          // Process working directory
+    pub service: Option<String>,
+    pub is_privileged: bool,
+    pub user: Option<String>,
 }
 
+/// Retrieves information about listening ports
 pub fn get_listening_ports() -> Result<Vec<PortInfo>, Box<dyn std::error::Error>> {
     let mut ports = Vec::new();
     let all_procs = procfs::process::all_processes()?;
-    let inode_map = create_inode_map(&all_procs.filter_map(Result::ok).collect::<Vec<_>>())?;
+    let inode_map = create_inode_map(&all_procs.filter_map(Result::ok).collect::<Vec<_>>())?; // Create a map of inode to PID
 
     for tcp in tcp_entrys()? {
         let proc = match inode_map.get(&tcp.inode) {
@@ -42,7 +41,7 @@ pub fn get_listening_ports() -> Result<Vec<PortInfo>, Box<dyn std::error::Error>
 
             pid: Some(proc.pid),
             process: Some(proc.stat()?.comm),
-            full_path: Some(proc.cmdline()?.join(" ")),
+            full_command: Some(proc.cmdline()?.join(" ")),
             cwd: Some(
                 proc.cwd()?
                     .as_os_str()
@@ -65,6 +64,7 @@ pub fn get_listening_ports() -> Result<Vec<PortInfo>, Box<dyn std::error::Error>
     Ok(ports)
 }
 
+/// Retrieves TCP entries for both IPv4 and IPv6 protocols
 fn tcp_entrys() -> Result<impl Iterator<Item = TcpNetEntry>, Box<dyn std::error::Error>> {
     let mut v = Vec::new();
     v.extend(procfs::net::tcp()?);
@@ -72,6 +72,7 @@ fn tcp_entrys() -> Result<impl Iterator<Item = TcpNetEntry>, Box<dyn std::error:
     Ok(v.into_iter().filter(|tcp| tcp.state == TcpState::Listen))
 }
 
+/// Creates a map of socket inode numbers to corresponding process PIDs
 fn create_inode_map(
     all_procs: &[Process],
 ) -> Result<HashMap<u64, i32>, Box<dyn std::error::Error>> {

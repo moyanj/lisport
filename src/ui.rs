@@ -76,7 +76,7 @@ pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
                         .clone()
                         .unwrap_or_else(|| "unknown".to_string());
 
-                    // 设置不同字段的颜色
+                    // Set style for each item
                     let display_text = vec![
                         Span::styled(
                             format!("Port: {:5} ", port.port),
@@ -107,7 +107,7 @@ pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
             );
             f.render_widget(list, chunks[0]);
 
-            // 设置状态栏的样式
+            // Status line style
             let status_line = if app_state.ports.is_empty() {
                 Span::styled("No ports found", Style::default().fg(Color::Red))
             } else {
@@ -132,9 +132,9 @@ pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
                 match key.code {
                     KeyCode::Esc | KeyCode::Char('q') => should_quit = true,
                     KeyCode::Char('r') => {
-                        // 刷新端口信息
+                        // Refresh port information
                         app_state.ports = get_listening_ports()?;
-                        // 调整滚动位置以防超出范围
+                        // Adjust scroll position if needed
                         if app_state.scroll_position >= app_state.ports.len() {
                             app_state.scroll_position = app_state.ports.len().saturating_sub(1);
                         }

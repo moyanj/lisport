@@ -1,18 +1,16 @@
-// src/nmap_services.rs
 use std::{collections::HashMap, str::FromStr};
 
-/// 端口协议组合（用于 HashMap 键）
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct PortKey {
     pub port: u16,
     pub protocol: String,
 }
 
-/// 静态存储所有端口服务
+/// All services data
 static NMAP_SERVICES: once_cell::sync::Lazy<HashMap<PortKey, PortService>> =
     once_cell::sync::Lazy::new(load_nmap_services);
 
-/// 端口服务信息
+/// Port service information
 #[derive(Debug, PartialEq, Clone)]
 pub struct PortService {
     pub name: String,
@@ -51,9 +49,9 @@ impl FromStr for PortService {
     }
 }
 
-/// 从嵌入的 nmap-services 文件加载数据
+/// Loads service data from the embedded services file
 pub fn load_nmap_services() -> HashMap<PortKey, PortService> {
-    include_str!("nmap-services")
+    include_str!("services-data")
         .lines()
         .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
         .filter_map(|line| line.parse::<PortService>().ok())
@@ -67,7 +65,7 @@ pub fn load_nmap_services() -> HashMap<PortKey, PortService> {
         .collect()
 }
 
-/// 查询端口服务（静态方法）
+/// Queries port service information (static method)
 pub fn get_service(port: u16, protocol: &str) -> Option<&'static PortService> {
     let key = PortKey {
         port,
@@ -76,7 +74,7 @@ pub fn get_service(port: u16, protocol: &str) -> Option<&'static PortService> {
     NMAP_SERVICES.get(&key)
 }
 
-/// 获取所有端口服务（静态方法）
+/// Gets all port services (static method)
 #[allow(dead_code)]
 pub fn all_services() -> &'static HashMap<PortKey, PortService> {
     &NMAP_SERVICES
