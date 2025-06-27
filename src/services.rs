@@ -6,9 +6,10 @@ pub struct PortKey {
     pub protocol: String,
 }
 
-/// All services data
-static NMAP_SERVICES: once_cell::sync::Lazy<HashMap<PortKey, PortService>> =
-    once_cell::sync::Lazy::new(load_nmap_services);
+lazy_static::lazy_static! {
+    /// All services data
+    static ref NMAP_SERVICES: HashMap<PortKey, PortService> = load_nmap_services();
+}
 
 /// Port service information
 #[derive(Debug, PartialEq, Clone)]

@@ -5,22 +5,8 @@ use procfs::{
     process::{FDTarget, Process},
 };
 
+use crate::core::PortInfo;
 use crate::services;
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct PortInfo {
-    pub port: u16,
-    pub inode: u64,
-    pub is_ipv6: bool,
-    pub host: String,
-    pub pid: Option<i32>,
-    pub process: Option<String>,      // Process name
-    pub full_command: Option<String>, // Full command line
-    pub cwd: Option<String>,          // Process working directory
-    pub service: Option<String>,
-    pub is_privileged: bool,
-    pub user: Option<String>,
-}
 
 /// Retrieves information about listening ports
 pub fn get_listening_ports() -> Result<Vec<PortInfo>, Box<dyn std::error::Error>> {

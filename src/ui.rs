@@ -28,24 +28,22 @@ impl AppState {
     }
 }
 
-pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
+pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+    let scan_method = cli.method;
 
     // Initialize state
-    let ports = get_listening_ports()?;
+    let ports = get_listening_ports(&scan_method)?;
     let mut app_state = AppState::new(ports);
 
     // Main loop
     let mut should_quit = false;
     while !should_quit {
-        // Get port information (refresh if needed)
-        app_state.ports = get_listening_ports()?;
-
         // Render UI
         terminal.draw(|f| {
             let size = f.size();
@@ -133,7 +131,7 @@ pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
                     KeyCode::Esc | KeyCode::Char('q') => should_quit = true,
                     KeyCode::Char('r') => {
                         // Refresh port information
-                        app_state.ports = get_listening_ports()?;
+                        app_state.ports = get_listening_ports(&scan_method)?;
                         // Adjust scroll position if needed
                         if app_state.scroll_position >= app_state.ports.len() {
                             app_state.scroll_position = app_state.ports.len().saturating_sub(1);
