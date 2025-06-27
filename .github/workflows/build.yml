@@ -91,7 +91,7 @@ jobs:
       # 构建步骤
       - name: Build Release
         run: |
-          $BUILD_CMD build --target ${{ matrix.target }} --release --all-features
+          $BUILD_CMD build --target ${{ matrix.target }} --release --all-features -vv
           ls -lh target/${{ matrix.target }}/release/
       
       # 上传制品
