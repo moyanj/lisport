@@ -17,6 +17,7 @@ use tui::{
 struct AppState {
     ports: Vec<PortInfo>,
     scroll_position: usize,
+    horizontal_scroll: usize,
 }
 
 impl AppState {
@@ -24,12 +25,12 @@ impl AppState {
         AppState {
             ports,
             scroll_position: 0,
+            horizontal_scroll: 0,
         }
     }
 }
 
 pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
-    // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -65,6 +66,10 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
                 .skip(app_state.scroll_position)
                 .take(visible_items)
                 .map(|port| {
+                    let full_command_name = port
+                        .full_command
+                        .clone()
+                        .unwrap_or_else(|| "unknown".to_string());
                     let process_name = port
                         .process
                         .clone()
@@ -73,6 +78,8 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
                         .service
                         .clone()
                         .unwrap_or_else(|| "unknown".to_string());
+                    let is_ipv6 = port.is_ipv6;
+                    let user_name = port.user.clone().unwrap_or_else(|| "unknown".to_string());
 
                     // Set style for each item
                     let display_text = vec![
@@ -85,12 +92,24 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
                             Style::default().fg(Color::Green),
                         ),
                         Span::styled(
+                            format!("| USER: {:7} ", user_name),
+                            Style::default().fg(Color::Red),
+                        ),
+                        Span::styled(
+                            format!("| IS_IPV6: {:5} ", is_ipv6),
+                            Style::default().fg(Color::Blue),
+                        ),
+                        Span::styled(
                             format!("| Process: {:15} ", process_name),
                             Style::default().fg(Color::Blue),
                         ),
                         Span::styled(
-                            format!("| Service: {}", service_name),
+                            format!("| Service: {:15} ", service_name),
                             Style::default().fg(Color::Magenta),
+                        ),
+                        Span::styled(
+                            format!("| FULL CMD: {} ", full_command_name),
+                            Style::default().fg(Color::Blue),
                         ),
                     ];
 
@@ -100,7 +119,7 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
 
             let list = List::new(items).block(
                 Block::default()
-                    .title("Listening Ports (↑/↓ to scroll, q to quit, r to refresh)")
+                    .title("Listening Ports (↑/↓/←/→  to scroll, q to quit, r to refresh)")
                     .borders(Borders::ALL),
             );
             f.render_widget(list, chunks[0]);
@@ -111,7 +130,7 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
             } else {
                 Span::styled(
                     format!(
-                        "Showing {}-{} of {} items (↑/↓ to scroll)",
+                        "Showing {}-{} of {} items",
                         app_state.scroll_position + 1,
                         (app_state.scroll_position + visible_items).min(app_state.ports.len()),
                         app_state.ports.len()
@@ -119,11 +138,9 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
                     Style::default().bg(Color::Black).fg(Color::White),
                 )
             };
-
-            let status = Block::default().borders(Borders::TOP).title(status_line);
+            let status = Block::default().title(status_line);
             f.render_widget(status, chunks[1]);
         })?;
-
         // Handle input
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
@@ -146,6 +163,14 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
                     KeyCode::Up => {
                         // Scroll up
                         app_state.scroll_position = app_state.scroll_position.saturating_sub(1);
+                    }
+                    KeyCode::Left => {
+                        // Scroll left
+                        app_state.horizontal_scroll = app_state.horizontal_scroll.saturating_sub(1);
+                    }
+                    KeyCode::Right => {
+                        // Scroll right
+                        app_state.horizontal_scroll += 1;
                     }
                     KeyCode::PageDown => {
                         // Page down
@@ -177,7 +202,6 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
             }
         }
     }
-
     // Clean up terminal
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
