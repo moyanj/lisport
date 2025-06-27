@@ -2,15 +2,12 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() {
-    // 获取输出目录（OUT_DIR）
     let output_path = Path::new("src/services.list");
 
-    // 打印一些构建信息（可选）
     println!("cargo:rerun-if-changed=generate_services.py");
     println!("cargo:rerun-if-changed=raw_services.list");
     println!("cargo:rerun-if-env-changed=PYTHONPATH");
 
-    // 构建命令：python3 generate_services.py
     let status = Command::new("python3").arg("generate_services.py").status();
 
     match status {

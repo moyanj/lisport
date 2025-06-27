@@ -1,2 +1,16 @@
 ollama 11434/tcp
-cupsd 631/tcpqq
+cupsd 631/tcp
+cupsd 631/udp
+alist 5244/tcp
+dns 53/tcp
+dns 53/udp
+php-fpm 9000/tcp
+rdp 3389/tcp
+rdp 3389/udp
+quic 443/udp
+k8s-api 6443/tcp
+kafka 9092/tcp
+DoT 853/tcp
+DoT 853/udp
+openvpn 1194/tcp
+openvpn 1194/udp
