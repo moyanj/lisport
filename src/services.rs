@@ -51,7 +51,7 @@ impl FromStr for PortService {
 
 /// Loads service data from the embedded services file
 pub fn load_nmap_services() -> HashMap<PortKey, PortService> {
-    include_str!("services-data")
+    include_str!("services.list")
         .lines()
         .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
         .filter_map(|line| line.parse::<PortService>().ok())
