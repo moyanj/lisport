@@ -27,12 +27,20 @@ pub fn get_listening_ports() -> Result<Vec<PortInfo>, Box<dyn std::error::Error>
     let mut ports = Vec::new();
     let all_procs = procfs::process::all_processes()?;
     let inode_map = create_inode_map(&all_procs.filter_map(Result::ok).collect::<Vec<_>>())?; // Create a map of inode to PID
+    let mut seen_entries = HashMap::new();
 
     for tcp in tcp_entrys()? {
         let proc = match inode_map.get(&tcp.inode) {
             Some(pid) => Process::new(*pid)?,
             None => continue,
         };
+
+        let entry_key = (tcp.local_address.port(), proc.pid);
+        if seen_entries.contains_key(&entry_key) {
+            continue; // Skip duplicate entry for the same port and PID
+        }
+        seen_entries.insert(entry_key, true);
+
         ports.push(PortInfo {
             port: tcp.local_address.port(),
             inode: tcp.inode,
