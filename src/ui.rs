@@ -113,6 +113,23 @@ pub fn ui_main(cli: crate::Cli) -> Result<String, Box<dyn std::error::Error>> {
                         ),
                     ];
 
+                    let display_text = if app_state.horizontal_scroll > 0 {
+                        // Apply horizontal scroll by truncating the start of the text
+                        let mut total_length = 0;
+                        let truncated_spans: Vec<_> = display_text
+                            .iter()
+                            .skip_while(|span| {
+                                let keep = total_length < app_state.horizontal_scroll;
+                                total_length += span.content.len();
+                                keep
+                            })
+                            .cloned()
+                            .collect();
+                        truncated_spans
+                    } else {
+                        display_text
+                    };
+
                     ListItem::new(Spans::from(display_text))
                 })
                 .collect();
