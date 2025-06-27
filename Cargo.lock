@@ -376,6 +376,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd945864f07fe9f5371a27ad7b52a172b4b499999f1d97574c9fa68373937e12"
 
 [[package]]
+name = "lisport"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "crossterm 0.29.0",
+ "once_cell",
+ "procfs",
+ "serde",
+ "serde_json",
+ "tui",
+ "users",
+]
+
+[[package]]
 name = "litrs"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -478,21 +493,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "portscan"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "crossterm 0.29.0",
- "once_cell",
- "procfs",
- "serde",
- "serde_json",
- "tui",
- "users",
 ]
 
 [[package]]

@@ -1,0 +1,104 @@
+name: Rust Release Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'src/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'src/**'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  
+defaults:
+  run:
+    shell: bash
+    
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    env:
+      BUILD_CMD: cargo
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            use_cross: false
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            use_cross: false
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            use_cross: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            use_cross: true
+            
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.target }}-cargo-
+      
+      # 安装 Rust stable 工具链
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          components: rust-src, llvm-tools-preview
+      
+      # 安装 musl-tools (仅 musl 目标需要)
+      - name: Install musl-tools
+        if: contains(matrix.target, 'musl') && runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools musl-dev
+      
+      # 安装 cross (用于交叉编译)
+      - name: Install cross
+        if: matrix.use_cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+      
+      - name: Overwrite build command env variable
+        if: matrix.use_cross
+        run: echo "BUILD_CMD=cross" >> $GITHUB_ENV
+      
+      # 构建步骤
+      - name: Build Release
+        run: |
+          $BUILD_CMD build --target ${{ matrix.target }} --release --all-features
+          ls -lh target/${{ matrix.target }}/release/
+      
+      # 上传制品
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/lisport*
+            target/${{ matrix.target }}/release/*.exe
+            !target/${{ matrix.target }}/release/*.d
+            !target/${{ matrix.target }}/release/*.pdb
+            !target/${{ matrix.target }}/release/*.rlib
+          compression-level: 9
+          if-no-files-found: error
+          
