@@ -4,10 +4,6 @@ use std::process::Command;
 fn main() {
     let output_path = Path::new("src/services.list");
 
-    println!("cargo:rerun-if-changed=generate_services.py");
-    println!("cargo:rerun-if-changed=raw_services.list");
-    println!("cargo:rerun-if-env-changed=PYTHONPATH");
-
     let status = Command::new("python3").arg("generate_services.py").status();
 
     match status {
