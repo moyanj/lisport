@@ -1,4 +1,4 @@
-use crate::PortInfo;
+use crate::core::PortInfo;
 use clap::ValueEnum;
 use serde_json::to_string_pretty;
 use std::fmt::Write;
@@ -26,8 +26,8 @@ fn output_text(ports: &[PortInfo]) -> String {
     output.push_str("PORT\tPID\tPROCESS\t\tSERVICE\n");
 
     for port_info in ports {
-        let process = port_info.process_name.as_deref().unwrap_or("unknown");
-        let service = port_info.service_name.as_deref().unwrap_or("unknown");
+        let process = port_info.process.as_deref().unwrap_or("unknown");
+        let service = port_info.service.as_deref().unwrap_or("unknown");
         let pid = port_info.pid.unwrap_or(0);
 
         writeln!(
@@ -57,8 +57,8 @@ fn output_markdown(ports: &[PortInfo]) -> String {
     output.push_str("|------|-----|---------|---------|\n");
 
     for port_info in ports {
-        let process = port_info.process_name.as_deref().unwrap_or("unknown");
-        let service = port_info.service_name.as_deref().unwrap_or("unknown");
+        let process = port_info.process.as_deref().unwrap_or("unknown");
+        let service = port_info.service.as_deref().unwrap_or("unknown");
         let pid = port_info.pid.unwrap_or(0);
 
         writeln!(

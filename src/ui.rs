@@ -1,4 +1,4 @@
-use crate::{PortInfo, get_listening_ports};
+use crate::core::{PortInfo, get_listening_ports};
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
@@ -68,11 +68,11 @@ pub fn ui_main() -> Result<String, Box<dyn std::error::Error>> {
                 .take(visible_items)
                 .map(|port| {
                     let process_name = port
-                        .process_name
+                        .process
                         .clone()
                         .unwrap_or_else(|| "unknown".to_string());
                     let service_name = port
-                        .service_name
+                        .service
                         .clone()
                         .unwrap_or_else(|| "unknown".to_string());
 
